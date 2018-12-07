@@ -1,0 +1,83 @@
+深度学习鉴别转移性乳腺癌
+哈佛医学院女执事医学中心，麻省理工学院，CSAIL
+{Dang55，HiSad，AbEkk2} BIDMC.HARVADD EDU KOSALA.CSEN.MIT.EDU RISHAB.GARGYYAGGMALL
+摘要
+国际生物医学成像研讨会（ISBI）为评估用于在前哨淋巴结活检的整个幻灯片图像中自动检测转移性乳腺癌的计算系统提出了重大挑战。我们团队在这次大挑战中赢得了两项比赛，获得了0.925的接收者操作曲线下面积（AUC）用于整个幻灯片图像分类的任务，以及0.7051的分数用于肿瘤定位任务。
+病理学家独立地检查相同的图像，获得0.966的全切片图像分类AUC和0.733的肿瘤定位评分。结合我们的深层学习系统的预测和人类病理学家的诊断，病理学家的AUC增加到0.995，表示人类错误率大约减少了85%。这些结果表明了利用深度学习在病理诊断的准确性上产生显著提高的力量。
+1。介绍
+病理学医学专业的任务是提供非传染性疾病诊断以指导患者的治疗和管理决策[4]。标准化、准确和可重复的病理诊断对于精确医学的发展至关重要。自19世纪中期以来，病理学家用来诊断的主要工具是显微镜[1 ]。显微图像的定性视觉分析的局限性包括缺乏标准化、诊断错误，以及典型病理学家的工作日中需要手动评估数百张幻灯片上的数百万细胞所需的标记性认知负荷[15、17、7]。因此，在过去的几十年中，人们越来越关注于开发用于辅助分析病理学中的显微图像的计算方法[9，8]。
+从2015年10月到2016年4月，国际生物医学成像研讨会（ISBI）举办了Camelyon Grand Challenge 2016（Camelyon16），以确定用于在数字全幻灯片图像中自动检测转移性乳腺癌的最佳计算图像分析系统。（WSIS）前哨淋巴结活检1。对乳腺癌前哨淋巴结的评估是美国癌症联合委员会TNM乳腺癌分期系统的重要组成部分，在该系统中，前哨淋巴结对转移癌阳性的患者将比阴性患者获得更高的病理TNM分期。淋巴结转移[6]，经常导致更积极的临床处理，包括腋窝淋巴结清扫[13，14]。
+前哨淋巴结的手动病理检查是费时和费力的，特别是在淋巴结对癌症为阴性或仅包含小转移癌灶的情况下。Many centers have implemented testing of sentinel lymph nodes with immunohistochemistry for pancytokeratins [5], which are proteins expressed on breast cancer cells and not normally present in lymph nodes, to improve the sensitivity of cancer metastasis detection. However, limitations of pancytokeratin immunohiostochemistry testing of sentinel lymph nodes include: increased cost, increased time for slide preparation, and increased number of slides required for pathological review. Further, even with immunohistochemistry-stained slides, the identiﬁcation of small cancer metastases can be tedious and inaccurate.
+计算机辅助图像分析系统已经被开发用来帮助从前哨淋巴结的胰角蛋白染色的免疫组织化学幻灯片中检测小的转移灶[22]；然而，这些系统没有用于临床。因此，开发用于前哨淋巴结评估的有效和成本有效的方法仍然是一个活跃的研究领域[11]，因为高性能的系统将具有提高准确性和低成本降低认知负荷的价值。
+这里，我们提出了一种基于深度学习的方法，用于从乳腺前哨淋巴结的整个幻灯片图像中识别癌症转移。我们的方法使用数以百万计的训练补丁来训练深度卷积神经网络，以作出补丁级预测来区分肿瘤补丁和正常补丁。然后，我们聚集斑块级预测以创建肿瘤概率热图，并对这些热图执行后处理，以便对基于幻灯片的分类任务和肿瘤定位任务进行预测。我们的系统在CAMELYON大挑战2016赢得了比赛，性能接近人类水平的准确性。最后，结合我们深层学习系统的预测和病理学家的解释产生了病理学家错误率的显著降低。
+2。数据集与评价指标
+在本节中，我们描述由竞赛组织者提供的Camelyon16数据集和用于对参与者进行排名的评价度量。
+2.1。CAMELYON16数据集
+CAMELYON16数据集由总共400个整体幻灯片图像（WSIS）分成270个用于训练，130个用于测试。两个分割包含来自两个机构（RADLAND UMC和UMC乌得勒支）的样本，表1提供了详细的C细节。
+训练幻灯片的基本真实数据包括病理学家对前哨淋巴结WSI上转移癌区域的描述。数据以两种格式提供：XML les包含癌症转移位置的注释轮廓的顶点和指示癌症转移位置的WSI二进制掩码。
+2.2。评价指标
+根据以下两个指标对参赛作品进行评价：
+●基于幻灯片的评价：对于这个度量，团队根据在包含转移的幻灯片和正常幻灯片之间进行区分的性能进行判断。竞争参与者提交了每个测试幻灯片的概率，表明其预测癌症的可能性。竞赛组织者使用接收者运营商（AUC）得分下的区域来测量参与者的表现。
+·基于病变的评估：对于这个度量，参与者提交了WSI内每个预测的癌症病变的概率和相应的（x，y）位置。竞赛组织者测量了参与者的表现，作为检测WSI中6个假阳性率（每个WSI有12、1、2、4和8个假阳性）中的所有真癌病变的平均敏感性。
+三。方法
+在这一节中，我们描述了我们的癌症转移检测方法。
+3.1。图像预处理
+图1：图像预处理过程中组织区域检测的可视化（在第3.1节中描述）。检测到的组织区域用绿色曲线突出显示。
+为了减少计算时间，我们集中分析在滑最有可能含有癌转移的地区，我们ﬁRST确定在WSI组织和排除背景白色空间。为了实现这一点，我们采用基于阈值的分割方法来自动检测背景区域。特别是，我们ﬁRST传输原始图像从RGB颜色空间到HSV颜色空间，利用Otsu算法[ 16 ]计算然后在每个信道的最佳阈值，和ﬁNAL掩码图像相结合，从H面具产生的渠道。检测结果在图1中被可视化，其中使用绿色曲线突出组织区域。
+根据检测结果，每个WSI的背景区域的平均百分比约为82%。
+3.2。癌症转移检测框架
+我们的癌症转移检测框架包括基于斑块的分类阶段和基于热图的后处理阶段，如图2所示。
+在模型训练过程中，基于斑块的分类阶段以完整的幻灯片图像和地面真实图像注释作为输入，指示每个包含转移癌的WSI的区域的位置。我们从训练WSI中随机抽取出数以百万计的小阳性和阴性斑块，如果小斑块位于肿瘤区域，则它是一个肿瘤/阳性斑块，用1标记，否则，它是一个正常/阴性斑块，用0标记。在选择了正负训练样本后，我们训练一个监督分类模型来区分这两类斑块，并将所有的预测结果嵌入到热图图像中。在基于热图的后处理阶段，我们使用肿瘤概率热图来计算每个WSI的基于幻灯片的评估和基于病变的评估分数。
+3.3。基于补丁的分类阶段
+在训练期间，这个阶段使用来自WSI的正和负区域的256x256像素补丁作为输入，并训练分类模型以区分正和负补丁。我们对这个分类任务评估了四个著名的深度学习网络体系结构的性能：GoogLeNet[20]、AlexNet[12]、VGG16[19]和面向面部的深度网络[21]，如表2所示。GoogLeNet和VGG16这两种深层网络实现了最好的基于补丁的分类性能。GoGoLNET的网络结构由27层和600万多个参数组成。
+表2：各种深部模型的评价
+In our experiments, we evaluated a range of magniﬁcation levels, including 40×, 20× and 10×, and we obtained the best performance with 40× magniﬁcation. 我们只使用了40×Migi阳离子的实验结果报告的骆驼竞争。
+After generating tumor-probability heatmaps using GoogLeNet across the entire training dataset, we noted that a signiﬁcant proportion of errors were due to false positive classiﬁcation from histologic mimics of cancer. To improve model performance on these regions, we extract additional training examples from these difﬁcult negative regions and retrain the model with a training set enriched for these hard negative patches.
+我们在图3中给出了我们的一个结果。给出了一个完整的幻灯片图像（图3（a））和基于块分类的ﬁ阳离子模型的深入学习，我们生成相应的肿瘤区域热图（图3（b）），其中突出的肿瘤区。
+图3：肿瘤区域检测的可视化。
+3.4。肿瘤模型的后处理以计算基于滑动和基于损伤的概率
+在完成基于补丁的分类阶段之后，我们为每个WSI生成肿瘤概率热图。在这些端点上，每个像素包含在0和1之间的值，指示像素包含肿瘤的概率。
+我们现在执行后处理来计算基于幻灯片和基于病变的分数为每个热图。
+3.4.1基于幻灯片的分类
+对于基于幻灯片的分类任务，后处理以每个WSI的热图作为输入，并产生整个WSI的单个肿瘤概率作为输出。给定一个热图，我们从每个热图中提取28个几何和形态学特征，包括肿瘤区域在整个组织区域上的百分比、肿瘤区域与最小周围凸起区域的面积比、平均预测值和t的最长轴。乌穆尔地区我们在所有训练案例的肿瘤概率热图上计算这些特征，并且我们建立一个随机森林分类器来区分具有转移和阴性WSI的WSI。在测试用例上，我们的基于幻灯片的分类方法达到了0.925的AUC，使其成为Camelyon大挑战中用于幻灯片分类任务的最佳系统。
+3.4.2基于病变的检测
+对于基于病变的检测后处理，我们的目标是确定每个WSI内的所有癌症病灶，很少有误报。为了实现这一点，我们使用上面描述的初始训练数据集训练深度模型（D-Ⅰ）。然后，我们训练第二深模型（D-Ⅱ）与训练集，富集肿瘤相邻的负区域。该模型（D-Ⅱ）产生的假阳性比D-Ⅰ少，但灵敏度降低。在我们的框架中，我们首先确定阈值。
+从0.90产生的热图，创建二进制热图。然后，我们识别肿瘤二进制掩膜内的连接组件，并且我们使用中心点作为每个连接组件的肿瘤位置。为了估计每个（x，y）部位的肿瘤概率，我们取D-I和D-II产生的肿瘤概率预测的平均值。将Camelyon16的评分指标作为平均灵敏度，在6个预先确定的假阳性率：每张幻灯片图像1/4、1/2、1、2、4和8FPs。我们的系统达到了0.7051分，这是最高的分数在比赛中，是百分之22高于二级得分（0.5761）。
+4。实验结果
+4.1。CAMELYON16的评价结果
+在本节中，我们将简要介绍Camelyon16组织者生成的评估结果，该结果也可以在网站2上找到。
+Celelyon 16评价有两种：基于幻灯片的评价和基于病变的评价。我们赢得了这两项具有挑战性的任务。
+基于幻灯片的评估：评估了算法的优点，以区分包含转移的幻灯片和正常的幻灯片。对接收机工作特性（ROC）进行滑动级分析，比较算法所用的度量是ROC曲线下面积（AUC）。我们提交的结果是基于第3.4.1节中的算法生成的。如图4所示，AUC为0.9250。注意，当假阳性率（FPR）较低时，我们的算法比第二最佳方法的效果要好得多。
+基于病变的评估：对于基于病变的评估，使用自由响应接收器操作特性（FROC）曲线。FROC曲线是敏感度图与每个图像的假阳性的平均数目的曲线图。我们提交的结果是基于第3.4.2节中的算法生成的。As shown in Fig. 5, we can make two observations: first, the pathologist did not make any false positive predictions; second, when the average number of false positives is larger than 2, which indicates that there will be two false positive alert in each slide on average, our performance (in terms 灵敏度）甚至胜过病理学家。
+4.2。深度学习系统与人类病理学家的结合
+为了评估针对人类病理学家的最高级的深度学习系统，Camelyon16组织者让病理学家检查在请愿书中使用的测试图像。对于基于幻灯片的分类任务，人类病理学家获得了0.9664的AUC，重新获得了3.4%的错误率。当我们的深度学习系统的预测与人类病理学家的预测相结合时，AUC被提高到0.9948，错误率下降到0.52％。
+5。讨论
+在此我们提出一个基于深度学习的系统，用于从前哨淋巴结的整个幻灯片图像中自动检测转移癌。我们系统的关键方面包括：用来自正常淋巴结区域的补丁来丰富训练集，该系统最初被误分类为癌症；使用最新的深度学习模型架构；以及仔细设计基于幻灯片的cla的后处理方法。SI和基于病变的检测任务。
+在历史上，数字病理学中的组织病理图像分析方法主要集中于低级图像分析任务（例如，颜色归一化、核分割和特征提取），然后使用经典机器学习来构造分类模型。方法包括回归、支持向量机和随机森林。通常，这些算法作为输入相对较小的图像特征集（按十个顺序）[9, 10 ]。基于这个框架，已经开发了从组织病理图像中自动提取中等高维图像特征集（大约数千）的方法，然后使用desi方法构造相对简单的线性分类模型。GNED用于降维，如稀疏回归[2 ]。
+Since 2012, deep learning-based approaches have consistently shown best-in-class performance in major computer vision competitions, such as the ImageNet Large Scale Visual Recognition Competition (ILSVRC) [18].
+基于深度学习的方法最近也显示了在病理学中的应用前景。来自Juergen Schmidhuber研究组的一个小组使用基于深度学习的方法来赢得ICPR 2012和MICCAI 2013挑战，重点在于有丝分裂gure检测的算法开发[3]。在基于深度学习的方法中，往往没有用于对象检测、对象分割和特征提取的离散的人工指导步骤。相反，深度学习算法仅将图像和图像标签(例如，1或0)作为输入，并且学习非常高维和复杂的模型参数集合，其中监督仅来自图像标签。
+我们在2016年卡梅隆大挑战赛中获胜的方法采用了27层的深层网络结构，并在测试数据集上获得了接近人类水平的分类性能。病理学家。因此，尽管目前仅病理学家就优于我们的深层学习系统，但是将深层学习与病理学家相结合，使病理学家的错误率大大降低，从超过3%降低到小于1%。更一般地说，这些结果表明，将基于深层学习的方法集成到诊断病理学家的工作中，可以驱动病理诊断的可重复性、准确性和临床价值的提高。
+6。致谢
+我们特别感谢2016年卡梅隆大挑战赛所有组织者对协调员巴贝克·艾希沙米·贝诺迪（Babak Ehteshami Bejnordi）表示感谢。AK和AHB是PATAI公司的共同创始人。
+工具书类
+〔1〕E. H. Ackerknecht等。鲁道夫·处女座：医生、政治家、人类学家。Rudolf Virchow：医生，政治家，人类学家，1953。1〔2〕A. H. Beck、A. R. Sangoi、S. Leung、R. J. Marinelli、T. O.
+Nielsen，范德维吉尔先生，R·B·韦斯特，范德里恩先生和D. Koller。乳腺癌形态学的系统分析揭示了与生存相关的基质特征。科学转化医学，3（108）：108RA113-108RA113，2011。5〔3〕D. C. Cires，安，A. Giusti，L. M. Gambardella，J. Schmidhuber。应用深度神经网络对乳腺癌组织学图像中的有丝分裂进行检测。
+计算机辅助干预——MICCAI 2013，第411页至第418页。施普林格，2013。5〔4〕R. S. Cotran、V. Kumar、T. Collins和S. L. Robbins。罗宾斯病的病理基础。1999。1〔5〕B. J. Czerniecki，A. M. Scheff，L.S.胼胝体，F. R.
+斯皮茨，I. BrasySn，E. F. Conant，S. G. Orel，J柏林，C. Helsabeck，D. L. Fraker等人。
+Immunohistochemistry with pancytokeratins improves the sensitivity of sentinel lymph node biopsy in patients with breast carcinoma. 恶性肿瘤85例（5）：1098～1103, 1999。1 [ 6 ] S.B边缘和C.C.康普顿。美国癌症联合委员会：AJCC癌症分期手册的第七版和TNM的未来。外科肿瘤学年鉴，17（6）：1471—1474, 2010。1〔7〕J. G. Elmore、G. M. Longton、P. A. Carney、B. M. Geller、T. Onega、A. N. Tosteson、H. D. Nelson、H. D. Nelson、Y
+埃里森，S. J. Schnitt，等。诊断一致性Jama，病理学家解释乳房活检标本。
+313（11）：1122—1132, 2015。1〔8〕F. Ghaznavi、A. Evans、A. Madabhushi和M. Feldman。
+病理学中的数字成像：整体幻灯片成像及超越。病理学年度回顾：疾病机制，8:331—359, 2013。1 [ 9 ] M. N. Gurcan，L. E. Boucheron，A.CAN，A.MaDabHuSi，N. M. Rajpoot，B. Yener。病理组织学图像分析生物医学工程，IEEE评论，2147 - 171, 2009。1, 5〔10〕H. Irshad、A. Veillard、L. Roux和D. Racoceanu。Methods for nuclei detection, segmentation, and classiﬁcation in digital histopathology: A reviewcurrent status and future potential. 生物医学工程，IEEE评论，7:97—114, 2014。5 [ 11 ] S. Jaffer和我。乳腺癌前哨淋巴结活检的演变解剖病理学进展，21（6）：433—442, 2014。1〔12〕A. Krizhevsky、I. Sutskever和G. E. Hinton。
+基于深度卷积神经网络的IMANET分类
+在F.Pereira，C.J.C.Burges，L.Bottou和K.Q.Weinberger，编辑，神经信息处理系统进展25，第1097-1105页。CurrAn Associates，Inc.，2012。3〔13〕G. H. Lyman、A. E. Giuliano、M. R. Somer·菲尔德、A. B. Benson、D. C. Bodurka、H. J. Burstein、A. J. Cochran、A. J. Cochran
+Cody，S. B. Edge，S. Galper等。美国临床肿瘤学学会指南对早期乳腺癌前哨淋巴结活检的建议。临床肿瘤学杂志，23（30）：7703—7720, 2005。1〔14〕G. H. Lyman、S. Temin、S. B. Edge、L. A. Newman、R. R.
+Turner，D. L. Weaver，A. B. Benson，L. D. Bosserman，H. J.
+伯斯坦，H. Cody，等。早期乳腺癌前哨淋巴结活检：美国临床肿瘤学学会临床实践指南更新。临床肿瘤学杂志，32（13）：1365—1383, 2014。1〔15〕R. E. Nakhleh。
+外科病理学中的误差减少。
+病理学与检验医学档案，130（5）：630—632, 2006。1〔16〕N. Otsu。一种灰度级Histograms的阈值选取方法。IEEE系统论，人与控制论，9（1）：62—66, 1979。2〔17〕S. S. Raab、D. M. Grzybicki、J. E. Janosky、R. J. Zarbo、F. A.
+迈耶、C. Jensen和S. J. Geyer。癌症诊断中的解剖病理学错误的临床影响和频率。
+恶性肿瘤104例（10）：2205～2213, 2005。1〔18〕O. Russakovsky、J. Deng、H. Su、J. Krause、S. Satheesh、S. Ma、Z. Huang、Pig、Y、Y等。
+IMANET的大规模视觉识别挑战。
+国际计算机视觉杂志，115（3）：211—252, 2015。5〔19〕K. Simonyan和A. Zisserman。
+非常深的卷积网络用于大规模图像识别。CoRR，ABS，1409.1556，2014。3〔20〕C. Szegedy、W. Liu、Y. Jia、P. Sermanet、S. Reed、D. Anguelov、D. Erhan、D. Erhan、和。
+用卷积加深。在CVPR 2015, 2015中。3〔21〕D. Wang、C. Otto和A. K. Jain。面部搜索的规模：8000万画廊。2015。3〔22〕D. L. Weaver、D. N. Krag、E. A. Manna、T. Ashikaga、S.P.哈洛和K. D. Bauer。Comparison of pathologistdetected and automated computer-assisted image analysis detected sentinel lymph node micrometastases in breast cancer. 现代病理学，16（11）：1159—1163, 2003。一
