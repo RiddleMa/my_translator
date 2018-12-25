@@ -1,3 +1,4 @@
+本代码实现两个功能，识别pdf文档文字，翻译为中文。具体操作如下：
 1.替换file_path为要翻译的文件，修改trans_txt的tol参数为baidu或youdao,默认为baidu
 2.运行程序，按照提示修改txt文件，规则如下：
 人工修改：
